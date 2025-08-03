@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Validation Library</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+    <!-- <link href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css" rel="stylesheet"/> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script> -->
+    
+    <script src="js/validation.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>JavaScript Validation Library Demo</h1>
+        
+        <form id="formUser">
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="string_field">String Field (required, min:5, max:255)</label>
+                        <input type="text" name="string_field" id="string_field" placeholder="Enter string">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="numeric_field">Numeric Field (required, min:3, max:15)</label>
+                        <input type="text" name="numeric_field" id="numeric_field" placeholder="Enter number">
+                    </div> 
+                    
+                    <div class="form-group">
+                        <label for="integer_field">Integer Field (required, min:5, max:150)</label>
+                        <input type="text" name="integer_field" id="integer_field" placeholder="Enter integer">
+                    </div>  
+                    
+                    <div class="form-group">
+                        <label for="email_field">Email Field (required, min:5, max:50)</label>
+                        <input type="text" name="email_field" id="email_field" placeholder="Enter email">
+                    </div> 
+
+                    <div class="form-group">
+                        <label for="req_1_field">Required Field 1 (required, min:1, max:5)</label>
+                        <select name="req_1_field" id="req_1_field">
+                            <option value="">Select option</option>
+                            <option value="1">Option 1</option>
+                            <option value="2">Option 2</option>
+                            <option value="3">Option 3</option>
+                            <option value="4">Option 4</option>
+                            <option value="test123456">Option 5 (Test Failed)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="req_2_field">Required Field 2 (required_if req_1_field = 2,3,4)</label>
+                        <input type="text" name="req_2_field" id="req_2_field" placeholder="Enter value">
+                    </div> 
+                    
+                    <div class="form-group">
+                        <label for="file_field">File Field (required, max:2MB, jpg,png,pdf)</label>
+                        <input type="file" name="file_field" id="file_field">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date_field">Date Field (required, after:2025-08-01)</label>
+                        <input type="date" name="date_field" id="date_field">
+                    </div> 
+                    
+                   <div class="form-group">
+                        <label for="date2_field">Date Field 2 (required, before:2025-07-01)</label>
+                        <input type="date" name="date2_field" id="date2_field">
+                    </div> 
+                </div>
+                
+                <div class="col">
+                    <div class="form-group">
+                        <label for="date3_field">Date Field 3 (required, weekend)</label>
+                        <input type="date" name="date3_field" id="date3_field">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date4_field">Date Field 4 (required, before_or_equal:date5_field)</label>
+                        <input type="date" name="date4_field" id="date4_field">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date5_field">Date Field 5 (required, after_or_equal:date4_field)</label>
+                        <input type="date" name="date5_field" id="date5_field">
+                    </div> 
+                    
+                    <div class="form-group">
+                        <label for="date6_field">Date Field 6 (required, date_format:Y-m-d)</label>
+                        <input type="text" name="date6_field" id="date6_field" placeholder="YYYY-MM-DD">
+                    </div> 
+                    
+                    <div class="form-group">
+                        <label for="time_field">Time Field (required)</label>
+                        <input type="time" name="time_field" id="time_field">
+                    </div> 
+                    
+                    <div class="form-group">
+                        <label for="time2_field">Time Field 2 (required, between:09:00,17:00)</label>
+                        <input type="time" name="time2_field" id="time2_field">
+                    </div>
+
+                   <div class="form-group">
+                        <label for="time3_field">Time Field 3 (required, date_format:H:i)</label>
+                        <input type="time" name="time3_field" id="time3_field" placeholder="HH:MM">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="url_field">URL Field (optional)</label>
+                        <input type="text" name="url_field" id="url_field" placeholder="Enter URL">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="boolean_field">Boolean Field</label>
+                        <select name="boolean_field" id="boolean_field">
+                            <option value="">Select</option>
+                            <option value="true">True</option>
+                            <option value="false">False</option>
+                            <option value="1">1</option>
+                            <option value="0">0</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmed_field">Password (required, confirmed)</label>
+                        <input type="password" name="confirmed_field" id="confirmed_field" placeholder="Enter password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmed_field_confirmation">Confirm Password</label>
+                        <input type="password" name="confirmed_field_confirmation" id="confirmed_field_confirmation" placeholder="Confirm password">
+                    </div> 
+                </div> 
+            </div>
+            
+            <div class="row">
+                <div class="col">
+                     <div class="form-group">
+                        <label for="alpha_field">Alpha Field (letters only)</label>
+                        <input type="text" name="alpha_field" id="alpha_field" placeholder="Letters only">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="alpha_num_field">Alpha Numeric Field</label>
+                        <input type="text" name="alpha_num_field" id="alpha_num_field" placeholder="Letters and numbers">
+                    </div> 
+                    
+                    <div class="form-group">
+                        <label for="same_field">Same Field (same as string_field)</label>
+                        <input type="text" name="same_field" id="same_field" placeholder="Must match string field">
+                    </div>
+                    
+                     <div class="form-group">
+                        <label for="different_field">Different Field (different from string_field)</label>
+                        <input type="text" name="different_field" id="different_field" placeholder="Must be different from string field">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="in_field">In Field (option1,option2,option3)</label>
+                        <select name="in_field" id="in_field">
+                            <option value="">Select</option>
+                            <option value="option1">Option 1</option>
+                            <option value="option2">Option 2</option>
+                            <option value="option3">Option 3</option>
+                            <option value="invalid">Invalid Option</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="not_in_field">Not In Field (not bad1,bad2,bad3)</label>
+                        <input type="text" name="not_in_field" id="not_in_field" placeholder="Don't use bad1, bad2, bad3">
+                    </div> 
+                </div>
+                
+                <div class="col">
+                    <div class="form-group">
+                        <label for="regex_field">Regex Field (^[A-Z][a-z]+$)</label>
+                        <input type="text" name="regex_field" id="regex_field" placeholder="Capital letter + lowercase">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="json_field">JSON Field</label>
+                        <textarea name="json_field" id="json_field" rows="3" placeholder='{"key": "value"}'></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ip_field">IP Field (IPv4 or IPv6)</label>
+                        <input type="text" name="ip_field" id="ip_field" placeholder="192.168.1.1 or ::1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ipv4_field">IPv4 Field</label>
+                        <input type="text" name="ipv4_field" id="ipv4_field" placeholder="192.168.1.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ipv6_field">IPv6 Field</label>
+                        <input type="text" name="ipv6_field" id="ipv6_field" placeholder="2001:0db8:85a3::8a2e:0370:7334">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="uuid_field">UUID Field</label>
+                        <input type="text" name="uuid_field" id="uuid_field" placeholder="550e8400-e29b-41d4-a716-446655440000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="digits_field">Digits Field (exactly 5 digits)</label>
+                        <input type="text" name="digits_field" id="digits_field" placeholder="12345">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="digits_between_field">Digits Between Field (3-7 digits)</label>
+                        <input type="text" name="digits_between_field" id="digits_between_field" placeholder="123 to 1234567">
+                    </div>
+                </div> 
+            </div>
+            
+            <button type="submit" class="btn">Submit Form</button>
+        </form>
+        
+        <div id="validation_messages"></div>
+    </div>
+
+    <script>
+        
+        // Form submission handler
+        document.getElementById('formUser').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Clear previous messages
+            document.getElementById('validation_messages').innerHTML = '';
+            
+            const rules = {
+                'string_field': 'required|string|min:5|max:10',
+                'numeric_field': 'required|numeric|min:3|max:15',
+                'integer_field': 'required|integer|min:5|max:150',
+                'email_field': 'required|email|min:5|max:50',
+                'req_1_field': 'required|min:1|max:5',
+                'req_2_field': 'required_if:req_1_field,=,2,3,4|min:2|max:15',
+                'file_field': 'required|file|size:2|mimes:jpg,png,pdf',
+                'date_field': 'required|date|after:2025-08-01',
+                'date2_field': 'required|date|before:2025-07-01',
+                'date3_field': 'required|date|weekend',
+                'date4_field': 'required|date|before_or_equal:date5_field',
+                'date5_field': 'required|date|after_or_equal:date4_field',
+                'date6_field': 'required|date_format:Y-m-d',
+                'time_field': 'required|time',
+                'time2_field': 'required|time|between:09:02,17:00',
+                'time3_field': 'required|date_format:H:i',
+                'url_field': 'url',
+                'boolean_field': 'boolean',
+                'confirmed_field': 'required|confirmed',
+                'alpha_field': 'alpha',
+                'alpha_num_field': 'alpha_num',
+                'same_field': 'same:string_field',
+                'different_field': 'different:string_field',
+                'in_field': 'in:option1,option2,option3',
+                'not_in_field': 'not_in:bad1,bad2,bad3',
+                'regex_field': 'regex:/^[A-Z][a-z]+$/',
+                'json_field': 'json',
+                'ip_field': 'ip',
+                'ipv4_field': 'ipv4',
+                'ipv6_field': 'ipv6',
+                'uuid_field': 'uuid',
+                'digits_field': 'digits:5',
+                'digits_between_field': 'digits_between:3,7',
+                'currency_field': 'currency:5',
+            };
+
+            const messages = {
+                'numeric_field': { 
+                    'required': ':label is mandatory',
+                    'min': 'Maximum length allowed for :label is 4'
+                },
+                'string_field': {
+                    'label': 'String Field Custom Label',
+                    'required': ':label is mandatory',
+                    'max': 'Maximum length allowed for :label is 255'
+                },
+                'req_1_field': {
+                    'label': 'Field 1 Custom Label',
+                    'required': ':label 1 is mandatory',
+                    'min': 'Minimum allowed :label is 1'
+                }
+            };
+
+            // Enable debug mode for demonstration
+            validationJsDebug(true);
+
+            if (validationJs(this, rules, messages)) {
+                const successDiv = document.createElement('div');
+                successDiv.className = 'success-message';
+                successDiv.innerHTML = '<strong>Success!</strong> Form validation passed. Form would be submitted.';
+                document.getElementById('validation_messages').appendChild(successDiv);
+                
+                console.log('Form validation passed!');
+            } else {
+                // let validateErr = validationJsError(); // Get all error messages
+                
+                // // Option 1: Single message combining all errors
+                // let errMessage = [];
+                // for (let field in validateErr) {
+                //     errMessage.push("<li>" + validateErr[field] + "</li>");
+                // }
+                
+                // const errorDiv = document.createElement('div');
+                // errorDiv.className = 'error-list';
+                // errorDiv.innerHTML = `
+                //     <strong>Validation Errors:</strong>
+                //     <ul>${errMessage.join('')}</ul>
+                // `;
+                // document.getElementById('validation_messages').appendChild(errorDiv);
+                
+                // // Debug information
+                // const debugDiv = document.createElement('div');
+                // debugDiv.className = 'debug-info';
+                // debugDiv.innerHTML = `
+                //     <strong>Debug Information:</strong><br>
+                //     <pre>${JSON.stringify(validateErr, null, 2)}</pre>
+                // `;
+                // document.getElementById('validation_messages').appendChild(debugDiv);
+
+                // console.log('Form validation failed:', validateErr);
+
+                validationJsError('toastr', 'single'); 
+            }
+        });
+        
+        // Add some helper text
+        document.addEventListener('DOMContentLoaded', function() {
+            const helpDiv = document.createElement('div');
+            helpDiv.innerHTML = `
+                <div style="background-color: #e7f3ff; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #bee5eb;">
+                    <strong>Testing Instructions:</strong>
+                    <ul>
+                        <li>Fill out the form with both valid and invalid data to test various validation rules</li>
+                        <li>Check the browser console for debug information</li>
+                        <li>Error messages will appear below the form when validation fails</li>
+                        <li>Success message will appear when all validations pass</li>
+                    </ul>
+                </div>
+            `;
+            document.querySelector('.container').insertBefore(helpDiv, document.querySelector('form'));
+        });
+    </script>
+</body>
+</html>
