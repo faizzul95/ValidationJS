@@ -353,6 +353,60 @@ function validateRule(value, rule, element, form, attributeType) {
 
             case 'currency':
                 return validateCurrency(value, parameters);
+                
+            case 'min_length':
+                return validateMinLength(value, parameters);
+                
+            case 'max_length':
+                return validateMaxLength(value, parameters);
+                
+            case 'alpha_dash':
+                return validateAlphaDash(value);
+                
+            case 'lowercase':
+                return validateLowercase(value);
+                
+            case 'uppercase':
+                return validateUppercase(value);
+                
+            case 'decimal':
+                return validateDecimal(value, parameters);
+                
+            case 'gt':
+                return validateGreaterThan(value, parameters, form, attributeType);
+                
+            case 'lt':
+                return validateLessThan(value, parameters, form, attributeType);
+                
+            case 'lte':
+                return validateLessThanOrEqual(value, parameters, form, attributeType);
+                
+            case 'dimensions':
+                return validateDimensions(value, parameters);
+                
+            case 'nullable':
+                return validateNullable(value);
+                
+            case 'sometimes':
+                return { valid: true }; // Always valid as it's just a marker
+                
+            case 'required_with':
+                return validateRequiredWith(value, parameters, form, attributeType);
+                
+            case 'required_unless':
+                return validateRequiredUnless(value, parameters, form, attributeType);
+                
+            case 'contains':
+                return validateContains(value, parameters);
+                
+            case 'doesnt_contain':
+                return validateDoesntContain(value, parameters);
+                
+            case 'accepted':
+                return validateAccepted(value);
+                
+            case 'image':
+                return validateImage(value);
             
             default:
                 return { valid: true };
@@ -364,6 +418,12 @@ function validateRule(value, rule, element, form, attributeType) {
 }
 
 // Validation rule implementations
+/**
+ * Validates if a field is required
+ * @param {*} value - The field value to validate
+ * @param {HTMLElement} element - The form element
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateRequired(value, element) {
     if (element.type === 'file') {
         return { valid: value && value.length > 0 };
@@ -376,6 +436,14 @@ function validateRequired(value, element) {
     return { valid: value !== null && value !== undefined && String(value).trim() !== '' };
 }
 
+/**
+ * Validates if a field is required conditionally based on another field's value
+ * @param {*} value - The field value to validate
+ * @param {Array} parameters - Array of parameters [field, operator, ...values]
+ * @param {HTMLElement} form - The form element
+ * @param {string} attributeType - The attribute type to use ('name' or 'id')
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateRequiredIf(value, parameters, form, attributeType) {
     if (parameters.length < 3) return { valid: true };
     
@@ -404,10 +472,20 @@ function validateRequiredIf(value, parameters, form, attributeType) {
     return { valid: true };
 }
 
+/**
+ * Validates if a value is a string
+ * @param {*} value - The value to validate
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateString(value) {
     return { valid: typeof value === 'string' || value === null || value === undefined || value === '' };
 }
 
+/**
+ * Validates if a value is numeric
+ * @param {*} value - The value to validate
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateNumeric(value) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     // Reject if contains 'e' or 'E' (scientific notation)
@@ -415,6 +493,11 @@ function validateNumeric(value) {
     return { valid: !isNaN(value) && !isNaN(parseFloat(value)) };
 }
 
+/**
+ * Validates if a value is an integer
+ * @param {*} value - The value to validate
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateInteger(value) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     // Reject if contains 'e' or 'E' (scientific notation)
@@ -422,12 +505,22 @@ function validateInteger(value) {
     return { valid: Number.isInteger(Number(value)) };
 }
 
+/**
+ * Validates if a value is a valid email address
+ * @param {*} value - The value to validate
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateEmail(value) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return { valid: emailRegex.test(value) };
 }
 
+/**
+ * Validates if a value is an array or can be converted to an array
+ * @param {*} value - The value to validate
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateArray(value) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -439,10 +532,22 @@ function validateArray(value) {
     return { valid: Array.isArray(value) };
 }
 
+/**
+ * Validates if a value is a file input
+ * @param {*} value - The value to validate (expected to be a FileList)
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateFile(value) {
     return { valid: value && value instanceof FileList };
 }
 
+/**
+ * Validates the size of a value (file size, array length, string length)
+ * @param {*} value - The value to validate
+ * @param {Array} parameters - Array containing size parameters
+ * @param {HTMLElement} element - The form element
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateSize(value, parameters, element) {
     if (!value || value.length === 0) return { valid: true };
     
@@ -460,6 +565,12 @@ function validateSize(value, parameters, element) {
     return { valid: true };
 }
 
+/**
+ * Validates file MIME types
+ * @param {FileList} value - The files to validate
+ * @param {Array} parameters - Array of allowed MIME types
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateMimes(value, parameters) {
     if (!value || value.length === 0) return { valid: true };
     
@@ -475,6 +586,11 @@ function validateMimes(value, parameters) {
     return { valid: true };
 }
 
+/**
+ * Helper function to check if a value is numeric
+ * @param {*} value - The value to check
+ * @returns {boolean} - True if the value is numeric, false otherwise
+ */
 function isNumericValue(value) {
     // Check if value is already a number
     if (typeof value === 'number') {
@@ -497,6 +613,13 @@ function isNumericValue(value) {
     return false;
 }
 
+/**
+ * Validates if a value meets minimum requirements (length, size, value)
+ * @param {*} value - The value to validate
+ * @param {Array} parameters - Array containing the minimum value
+ * @param {HTMLElement} element - The form element
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateMin(value, parameters, element) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -524,6 +647,13 @@ function validateMin(value, parameters, element) {
     return { valid: parseFloat(value) >= min };
 }
 
+/**
+ * Validates if a value meets maximum requirements (length, size, value)
+ * @param {*} value - The value to validate
+ * @param {Array} parameters - Array containing the maximum value
+ * @param {HTMLElement} element - The form element
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateMax(value, parameters, element) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -551,6 +681,13 @@ function validateMax(value, parameters, element) {
     return { valid: parseFloat(value) <= max };
 }
 
+/**
+ * Validates if a value is between a minimum and maximum value
+ * @param {*} value - The value to validate
+ * @param {Array} parameters - Array containing the minimum and maximum values
+ * @param {HTMLElement} element - The form element
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateBetween(value, parameters, element) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -577,6 +714,11 @@ function validateBetween(value, parameters, element) {
     return { valid: numValue >= min && numValue <= max };
 }
 
+/**
+ * Validates if a value is a valid date
+ * @param {*} value - The date value to validate
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateDate(value) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -584,6 +726,12 @@ function validateDate(value) {
     return { valid: !isNaN(date.getTime()) };
 }
 
+/**
+ * Validates if a date value matches the specified format
+ * @param {string} value - The date string to validate
+ * @param {Array} parameters - Array containing the date format
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateDateFormat(value, parameters) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -658,6 +806,12 @@ function validateDateFormat(value, parameters) {
     return validateDateLogic(value, format);
 }
 
+/**
+ * Helper function to validate a date string against a specific format
+ * @param {string} value - The date string to validate
+ * @param {string} format - The date format to validate against
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateDateLogic(value, format) {
     try {
         let date;
@@ -752,6 +906,12 @@ function validateDateLogic(value, format) {
     }
 }
 
+/**
+ * Validates if a date is after another date
+ * @param {string} value - The date string to validate
+ * @param {Array} parameters - Array containing the reference date
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateAfter(value, parameters) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -765,6 +925,12 @@ function validateAfter(value, parameters) {
     return { valid: valueDate > compareDate };
 }
 
+/**
+ * Validates if a date is before another date
+ * @param {string} value - The date string to validate
+ * @param {Array} parameters - Array containing the reference date
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateBefore(value, parameters) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -778,6 +944,14 @@ function validateBefore(value, parameters) {
     return { valid: valueDate < compareDate };
 }
 
+/**
+ * Validates if a date is after or equal to another date
+ * @param {string} value - The date string to validate
+ * @param {Array} parameters - Array containing the reference date or field name
+ * @param {HTMLElement} form - The form element
+ * @param {string} attributeType - The attribute type to use ('name' or 'id')
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateAfterOrEqual(value, parameters, form, attributeType) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -801,6 +975,14 @@ function validateAfterOrEqual(value, parameters, form, attributeType) {
     return { valid: valueDate >= compareDate };
 }
 
+/**
+ * Validates if a date is before or equal to another date
+ * @param {string} value - The date string to validate
+ * @param {Array} parameters - Array containing the reference date or field name
+ * @param {HTMLElement} form - The form element
+ * @param {string} attributeType - The attribute type to use ('name' or 'id')
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateBeforeOrEqual(value, parameters, form, attributeType) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -824,6 +1006,11 @@ function validateBeforeOrEqual(value, parameters, form, attributeType) {
     return { valid: valueDate <= compareDate };
 }
 
+/**
+ * Validates if a date falls on a weekend (Saturday or Sunday)
+ * @param {string} value - The date string to validate
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateWeekend(value) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -834,6 +1021,11 @@ function validateWeekend(value) {
     return { valid: dayOfWeek === 0 || dayOfWeek === 6 };
 }
 
+/**
+ * Validates if a value is a valid time in 24-hour format (HH:MM)
+ * @param {string} value - The time string to validate
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateTime(value) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -841,6 +1033,11 @@ function validateTime(value) {
     return { valid: timeRegex.test(value) };
 }
 
+/**
+ * Validates if a value is a valid URL
+ * @param {string} value - The URL string to validate
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateUrl(value) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -852,6 +1049,11 @@ function validateUrl(value) {
     }
 }
 
+/**
+ * Validates if a value represents a boolean
+ * @param {*} value - The value to validate
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateBoolean(value) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -859,6 +1061,14 @@ function validateBoolean(value) {
     return { valid: booleanValues.includes(value) };
 }
 
+/**
+ * Validates if a value matches its confirmation field
+ * @param {*} value - The value to validate
+ * @param {HTMLElement} element - The form element
+ * @param {HTMLElement} form - The form element
+ * @param {string} attributeType - The attribute type to use ('name' or 'id')
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateConfirmed(value, element, form, attributeType) {
     const confirmationFieldName = element.getAttribute(attributeType) + '_confirmation';
     const confirmationElement = form.querySelector(`[${attributeType}="${confirmationFieldName}"]`);
@@ -871,6 +1081,11 @@ function validateConfirmed(value, element, form, attributeType) {
     return { valid: value === confirmationValue };
 }
 
+/**
+ * Validates if a value contains only alphabetic characters
+ * @param {string} value - The string to validate
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateAlpha(value) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -878,6 +1093,11 @@ function validateAlpha(value) {
     return { valid: alphaRegex.test(value) };
 }
 
+/**
+ * Validates if a value contains only alphanumeric characters
+ * @param {string} value - The string to validate
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateAlphaNum(value) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -885,6 +1105,14 @@ function validateAlphaNum(value) {
     return { valid: alphaNumRegex.test(value) };
 }
 
+/**
+ * Validates if a value is the same as another field's value
+ * @param {*} value - The value to validate
+ * @param {Array} parameters - Array containing the field name to compare with
+ * @param {HTMLElement} form - The form element
+ * @param {string} attributeType - The attribute type to use ('name' or 'id')
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateSame(value, parameters, form, attributeType) {
     const compareElement = form.querySelector(`[${attributeType}="${parameters[0]}"]`);
     
@@ -896,6 +1124,14 @@ function validateSame(value, parameters, form, attributeType) {
     return { valid: value === compareValue };
 }
 
+/**
+ * Validates if a value is different from another field's value
+ * @param {*} value - The value to validate
+ * @param {Array} parameters - Array containing the field name to compare with
+ * @param {HTMLElement} form - The form element
+ * @param {string} attributeType - The attribute type to use ('name' or 'id')
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateDifferent(value, parameters, form, attributeType) {
     const compareElement = form.querySelector(`[${attributeType}="${parameters[0]}"]`);
     
@@ -907,12 +1143,24 @@ function validateDifferent(value, parameters, form, attributeType) {
     return { valid: value !== compareValue };
 }
 
+/**
+ * Validates if a value is in a list of allowed values
+ * @param {*} value - The value to validate
+ * @param {Array} parameters - Array of allowed values
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateIn(value, parameters) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
     return { valid: parameters.includes(String(value)) };
 }
 
+/**
+ * Validates if a value is not in a list of disallowed values
+ * @param {*} value - The value to validate
+ * @param {Array} parameters - Array of disallowed values
+ * @returns {Object} - Object with valid property indicating validation result
+ */
 function validateNotIn(value, parameters) {
     if (value === '' || value === null || value === undefined) return { valid: true };
     
@@ -1040,6 +1288,394 @@ function validateCurrency(value, parameters) {
     return { valid: true };
 }
 
+function validateMinLength(value, parameters) {
+    if (value === '' || value === null || value === undefined) return { valid: true };
+    
+    try {
+        const minLength = parseInt(parameters[0]);
+        const valueStr = String(value);
+        
+        return { valid: valueStr.length >= minLength };
+    } catch (error) {
+        console.error('Error in min_length validation:', error);
+        return { valid: false };
+    }
+}
+
+function validateMaxLength(value, parameters) {
+    if (value === '' || value === null || value === undefined) return { valid: true };
+    
+    try {
+        const maxLength = parseInt(parameters[0]);
+        const valueStr = String(value);
+        
+        return { valid: valueStr.length <= maxLength };
+    } catch (error) {
+        console.error('Error in max_length validation:', error);
+        return { valid: false };
+    }
+}
+
+function validateAlphaDash(value) {
+    if (value === '' || value === null || value === undefined) return { valid: true };
+    
+    try {
+        // Allows alpha-numeric characters, dashes, and underscores
+        const alphaDashRegex = /^[a-zA-Z0-9_-]+$/;
+        return { valid: alphaDashRegex.test(value) };
+    } catch (error) {
+        console.error('Error in alpha_dash validation:', error);
+        return { valid: false };
+    }
+}
+
+function validateLowercase(value) {
+    if (value === '' || value === null || value === undefined) return { valid: true };
+    
+    try {
+        // Check if the string is all lowercase
+        return { valid: String(value).toLowerCase() === String(value) };
+    } catch (error) {
+        console.error('Error in lowercase validation:', error);
+        return { valid: false };
+    }
+}
+
+function validateUppercase(value) {
+    if (value === '' || value === null || value === undefined) return { valid: true };
+    
+    try {
+        // Check if the string is all uppercase
+        return { valid: String(value).toUpperCase() === String(value) };
+    } catch (error) {
+        console.error('Error in uppercase validation:', error);
+        return { valid: false };
+    }
+}
+
+function validateDecimal(value, parameters) {
+    if (value === '' || value === null || value === undefined) return { valid: true };
+    
+    try {
+        // Default values
+        let minDecimalPlaces = 1;
+        let maxDecimalPlaces = null;
+        
+        // Parse parameters if provided
+        if (parameters && parameters.length > 0) {
+            if (parameters.length === 1) {
+                // Single parameter: exact number of decimal places
+                minDecimalPlaces = parseInt(parameters[0]);
+                maxDecimalPlaces = minDecimalPlaces;
+            } else if (parameters.length >= 2) {
+                // Min and max decimal places
+                minDecimalPlaces = parseInt(parameters[0]);
+                maxDecimalPlaces = parseInt(parameters[1]);
+            }
+        }
+        
+        // Check if value is a valid number
+        if (!/^[+-]?\d*\.?\d+$/.test(String(value))) {
+            return { valid: false };
+        }
+        
+        // Extract decimal part
+        const parts = String(value).split('.');
+        if (parts.length === 1) {
+            // No decimal part
+            return { valid: minDecimalPlaces === 0 };
+        }
+        
+        const decimalPlaces = parts[1].length;
+        
+        // Check if decimal places match requirements
+        if (maxDecimalPlaces !== null) {
+            return { valid: decimalPlaces >= minDecimalPlaces && decimalPlaces <= maxDecimalPlaces };
+        } else {
+            return { valid: decimalPlaces >= minDecimalPlaces };
+        }
+    } catch (error) {
+        console.error('Error in decimal validation:', error);
+        return { valid: false };
+    }
+}
+
+function validateGreaterThan(value, parameters, form, attributeType) {
+    if (value === '' || value === null || value === undefined) return { valid: true };
+    
+    try {
+        if (parameters.length === 0) return { valid: false };
+        
+        let compareValue;
+        
+        // Check if parameter is a field name
+        const compareElement = form.querySelector(`[${attributeType}="${parameters[0]}"]`);
+        if (compareElement) {
+            compareValue = getFieldValue(compareElement);
+        } else {
+            compareValue = parameters[0];
+        }
+        
+        // If both are numeric, compare as numbers
+        if (isNumericValue(value) && isNumericValue(compareValue)) {
+            return { valid: parseFloat(value) > parseFloat(compareValue) };
+        }
+        
+        // Otherwise compare as strings
+        return { valid: String(value).length > String(compareValue).length };
+    } catch (error) {
+        console.error('Error in gt validation:', error);
+        return { valid: false };
+    }
+}
+
+function validateLessThan(value, parameters, form, attributeType) {
+    if (value === '' || value === null || value === undefined) return { valid: true };
+    
+    try {
+        if (parameters.length === 0) return { valid: false };
+        
+        let compareValue;
+        
+        // Check if parameter is a field name
+        const compareElement = form.querySelector(`[${attributeType}="${parameters[0]}"]`);
+        if (compareElement) {
+            compareValue = getFieldValue(compareElement);
+        } else {
+            compareValue = parameters[0];
+        }
+        
+        // If both are numeric, compare as numbers
+        if (isNumericValue(value) && isNumericValue(compareValue)) {
+            return { valid: parseFloat(value) < parseFloat(compareValue) };
+        }
+        
+        // Otherwise compare as strings
+        return { valid: String(value).length < String(compareValue).length };
+    } catch (error) {
+        console.error('Error in lt validation:', error);
+        return { valid: false };
+    }
+}
+
+function validateLessThanOrEqual(value, parameters, form, attributeType) {
+    if (value === '' || value === null || value === undefined) return { valid: true };
+    
+    try {
+        if (parameters.length === 0) return { valid: false };
+        
+        let compareValue;
+        
+        // Check if parameter is a field name
+        const compareElement = form.querySelector(`[${attributeType}="${parameters[0]}"]`);
+        if (compareElement) {
+            compareValue = getFieldValue(compareElement);
+        } else {
+            compareValue = parameters[0];
+        }
+        
+        // If both are numeric, compare as numbers
+        if (isNumericValue(value) && isNumericValue(compareValue)) {
+            return { valid: parseFloat(value) <= parseFloat(compareValue) };
+        }
+        
+        // Otherwise compare as strings
+        return { valid: String(value).length <= String(compareValue).length };
+    } catch (error) {
+        console.error('Error in lte validation:', error);
+        return { valid: false };
+    }
+}
+
+function validateDimensions(value, parameters) {
+    if (value === '' || value === null || value === undefined || !value || !value.length) return { valid: true };
+    
+    try {
+        // Early return if no files
+        if (!(value instanceof FileList) || value.length === 0) return { valid: false };
+        
+        // Parse parameters
+        const constraints = {};
+        for (const param of parameters) {
+            const [key, val] = param.split('=');
+            if (key && val) {
+                constraints[key.trim()] = parseInt(val.trim());
+            }
+        }
+        
+        // We can only validate client-side for certain image file types
+        const file = value[0];
+        const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp'];
+        
+        if (!validImageTypes.includes(file.type)) {
+            // If not an image we can process, return valid and let server validate
+            return { valid: true };
+        }
+        
+        return new Promise((resolve) => {
+            const img = new Image();
+            const objectURL = URL.createObjectURL(file);
+            
+            img.onload = function() {
+                URL.revokeObjectURL(objectURL);
+                const width = img.width;
+                const height = img.height;
+                let valid = true;
+                
+                // Check each constraint
+                if (constraints.min_width && width < constraints.min_width) valid = false;
+                if (constraints.max_width && width > constraints.max_width) valid = false;
+                if (constraints.min_height && height < constraints.min_height) valid = false;
+                if (constraints.max_height && height > constraints.max_height) valid = false;
+                if (constraints.width && width !== constraints.width) valid = false;
+                if (constraints.height && height !== constraints.height) valid = false;
+                
+                resolve({ valid });
+            };
+            
+            img.onerror = function() {
+                URL.revokeObjectURL(objectURL);
+                resolve({ valid: false });
+            };
+            
+            img.src = objectURL;
+        });
+    } catch (error) {
+        console.error('Error in dimensions validation:', error);
+        return { valid: false };
+    }
+}
+
+function validateNullable() {
+    // Always valid - just a marker that null values are allowed
+    return { valid: true };
+}
+
+function validateRequiredWith(value, parameters, form, attributeType) {
+    try {
+        // Check if any of the specified fields have values
+        let anyFieldHasValue = false;
+        
+        for (const fieldName of parameters) {
+            const fieldElement = form.querySelector(`[${attributeType}="${fieldName}"]`);
+            if (!fieldElement) continue;
+            
+            const fieldValue = getFieldValue(fieldElement);
+            if (fieldValue !== null && fieldValue !== undefined && String(fieldValue).trim() !== '') {
+                anyFieldHasValue = true;
+                break;
+            }
+        }
+        
+        // If any field has value, then validate as required
+        if (anyFieldHasValue) {
+            return validateRequired(value);
+        }
+        
+        // Otherwise, field is optional
+        return { valid: true };
+    } catch (error) {
+        console.error('Error in required_with validation:', error);
+        return { valid: false };
+    }
+}
+
+function validateRequiredUnless(value, parameters, form, attributeType) {
+    try {
+        if (parameters.length < 2) return { valid: true };
+        
+        const fieldName = parameters[0];
+        const fieldElement = form.querySelector(`[${attributeType}="${fieldName}"]`);
+        
+        if (!fieldElement) return validateRequired(value);
+        
+        const fieldValue = getFieldValue(fieldElement);
+        const allowedValues = parameters.slice(1);
+        
+        // If the field value is in the allowed values, this field is optional
+        if (allowedValues.includes(String(fieldValue))) {
+            return { valid: true };
+        }
+        
+        // Otherwise, it's required
+        return validateRequired(value);
+    } catch (error) {
+        console.error('Error in required_unless validation:', error);
+        return { valid: false };
+    }
+}
+
+function validateContains(value, parameters) {
+    if (value === '' || value === null || value === undefined) return { valid: true };
+    
+    try {
+        const valueStr = String(value);
+        for (const param of parameters) {
+            if (!valueStr.includes(param)) {
+                return { valid: false };
+            }
+        }
+        
+        return { valid: true };
+    } catch (error) {
+        console.error('Error in contains validation:', error);
+        return { valid: false };
+    }
+}
+
+function validateDoesntContain(value, parameters) {
+    if (value === '' || value === null || value === undefined) return { valid: true };
+    
+    try {
+        const valueStr = String(value);
+        for (const param of parameters) {
+            if (valueStr.includes(param)) {
+                return { valid: false };
+            }
+        }
+        
+        return { valid: true };
+    } catch (error) {
+        console.error('Error in doesnt_contain validation:', error);
+        return { valid: false };
+    }
+}
+
+function validateAccepted(value) {
+    try {
+        const acceptedValues = [true, 'true', 1, '1', 'yes', 'on'];
+        return { valid: acceptedValues.includes(value) };
+    } catch (error) {
+        console.error('Error in accepted validation:', error);
+        return { valid: false };
+    }
+}
+
+function validateImage(value) {
+    if (value === '' || value === null || value === undefined || !value) return { valid: true };
+    
+    try {
+        if (!(value instanceof FileList)) return { valid: false };
+        if (value.length === 0) return { valid: true }; // Empty is valid if not required
+        
+        const file = value[0];
+        const validImageTypes = [
+            'image/jpeg', 
+            'image/png', 
+            'image/gif', 
+            'image/webp', 
+            'image/svg+xml', 
+            'image/bmp',
+            'image/tiff'
+        ];
+        
+        return { valid: validImageTypes.includes(file.type) };
+    } catch (error) {
+        console.error('Error in image validation:', error);
+        return { valid: false };
+    }
+}
+
 /**
     * Get error message for a validation rule
     * @param {string} fieldName - Field name
@@ -1052,14 +1688,69 @@ function validateCurrency(value, parameters) {
 function getErrorMessage(fieldName, rule, fieldMessages, fieldLabel, customMessage) {
     const { name, parameters } = rule;
     
+    // Helper function to replace all placeholders in a message
+    const replacePlaceholders = (message) => {
+        // Basic placeholders
+        let replacedMessage = message
+            .replace(/:label/g, fieldLabel)
+            .replace(/:attribute/g, fieldLabel)
+            .replace(/:field/g, fieldName)
+            .replace(/:value/g, 'the input');
+        
+        // Parameter placeholders
+        if (parameters && parameters.length > 0) {
+            // Replace indexed parameters: :param[0], :param[1], etc.
+            parameters.forEach((param, index) => {
+                replacedMessage = replacedMessage.replace(
+                    new RegExp(`:param\\[${index}\\]`, 'g'), 
+                    param
+                );
+            });
+            
+            // Common named placeholders
+            replacedMessage = replacedMessage
+                .replace(/:min/g, parameters[0])
+                .replace(/:max/g, parameters.length > 1 ? parameters[1] : parameters[0]);
+                
+            // Special handling for specific rules
+            switch (name) {
+                case 'between':
+                    replacedMessage = replacedMessage
+                        .replace(/:min_value/g, parameters[0])
+                        .replace(/:max_value/g, parameters[1]);
+                    break;
+                case 'mimes':
+                case 'in':
+                case 'not_in':
+                    replacedMessage = replacedMessage
+                        .replace(/:values/g, parameters.join(', '));
+                    break;
+                case 'dimensions':
+                    // Extract constraint values from parameters like 'min_width=100'
+                    const constraints = {};
+                    parameters.forEach(param => {
+                        const [key, val] = param.split('=');
+                        if (key && val) {
+                            constraints[key.trim()] = val.trim();
+                            replacedMessage = replacedMessage
+                                .replace(new RegExp(`:${key.trim()}`, 'g'), val.trim());
+                        }
+                    });
+                    break;
+            }
+        }
+        
+        return replacedMessage;
+    };
+    
     // Check for custom message for this specific rule
     if (fieldMessages[name]) {
-        return fieldMessages[name].replace(':label', fieldLabel);
+        return replacePlaceholders(fieldMessages[name]);
     }
     
     // Use custom message from validation if available
     if (customMessage) {
-        return customMessage;
+        return replacePlaceholders(customMessage);
     }
     
     // Default messages
@@ -1101,10 +1792,27 @@ function getErrorMessage(fieldName, rule, fieldMessages, fieldLabel, customMessa
         ipv6: `The ${fieldLabel} field must be a valid IPv6 address.`,
         uuid: `The ${fieldLabel} field must be a valid UUID.`,
         digits: `The ${fieldLabel} field must be ${parameters[0]} digits.`,
-        digits_between: `The ${fieldLabel} field must be between ${parameters[0]} and ${parameters[1]} digits.`
+        digits_between: `The ${fieldLabel} field must be between ${parameters[0]} and ${parameters[1]} digits.`,
+        min_length: `The ${fieldLabel} must be at least ${parameters[0]} characters.`,
+        max_length: `The ${fieldLabel} may not be greater than ${parameters[0]} characters.`,
+        alpha_dash: `The ${fieldLabel} may only contain letters, numbers, dashes and underscores.`,
+        lowercase: `The ${fieldLabel} must be lowercase.`,
+        uppercase: `The ${fieldLabel} must be uppercase.`,
+        decimal: `The ${fieldLabel} must have ${parameters.length > 1 ? `${parameters[0]} to ${parameters[1]}` : parameters[0]} decimal places.`,
+        gt: `The ${fieldLabel} must be greater than ${parameters[0]}.`,
+        lt: `The ${fieldLabel} must be less than ${parameters[0]}.`,
+        lte: `The ${fieldLabel} must be less than or equal to ${parameters[0]}.`,
+        dimensions: `The ${fieldLabel} has invalid image dimensions.`,
+        required_with: `The ${fieldLabel} field is required when ${parameters.join(', ')} is present.`,
+        required_unless: `The ${fieldLabel} field is required unless ${parameters[0]} is in ${parameters.slice(1).join(', ')}.`,
+        contains: `The ${fieldLabel} field must contain: ${parameters.join(', ')}.`,
+        doesnt_contain: `The ${fieldLabel} field must not contain: ${parameters.join(', ')}.`,
+        accepted: `The ${fieldLabel} must be accepted.`,
+        image: `The ${fieldLabel} must be an image.`
     };
     
-    return defaultMessages[name] || `The ${fieldLabel} field is invalid.`;
+    const defaultMessage = defaultMessages[name] || `The ${fieldLabel} field is invalid.`;
+    return replacePlaceholders(defaultMessage);
 }
 
 /**
