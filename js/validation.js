@@ -13,6 +13,10 @@ let validationDebug = false;
 function validationJs(formElement, rules, messages = {}, attributeType = 'name') {
     // Clear previous errors
     validationErrors = {};
+
+    // Define classes for validation (Bootstrap classes)
+    const validationSuccessClass = 'is-valid';
+    const validationErrorClass = 'is-invalid';
     
     try {
         // Get form element
@@ -59,16 +63,22 @@ function validationJs(formElement, rules, messages = {}, attributeType = 'name')
                     const fieldMessages = messages[fieldName] || {};
                     const fieldLabel = fieldMessages.label || baseFieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                     
+                    // Remove previous validation classes before evaluating
+                    fieldElement.classList.remove(validationErrorClass, validationSuccessClass);
+                    
                     if (validationDebug) {
                         console.log(`Validating array field: ${indexedFieldName}, value:`, fieldValue);
                     }
                     
+                    let fieldIsValid = true;
                     const ruleArray = parseRules(fieldRules);
+                    
                     for (let rule of ruleArray) {
                         const result = validateRule(fieldValue, rule, fieldElement, form, attributeType);
                         
                         if (!result.valid) {
                             isValid = false;
+                            fieldIsValid = false;
                             const errorMessage = getErrorMessage(baseFieldName, rule, fieldMessages, `${fieldLabel} #${index + 1}`, result.message);
                             
                             if (!validationErrors[indexedFieldName]) {
@@ -77,13 +87,18 @@ function validationJs(formElement, rules, messages = {}, attributeType = 'name')
                             validationErrors[indexedFieldName].push(errorMessage);
                             
                             // Add error class to field
-                            fieldElement.classList.add('error');
+                            fieldElement.classList.add(validationErrorClass);
                             
                             if (validationDebug) {
                                 console.log(`Validation failed for ${indexedFieldName}:`, errorMessage);
                             }
                             break;
                         }
+                    }
+                    
+                    // If validation passed, add success class
+                    if (fieldIsValid) {
+                        fieldElement.classList.add(validationSuccessClass);
                     }
                 });
             } else {
@@ -101,16 +116,22 @@ function validationJs(formElement, rules, messages = {}, attributeType = 'name')
                 const fieldMessages = messages[fieldName] || {};
                 const fieldLabel = fieldMessages.label || fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 
+                // Remove previous validation classes before evaluating
+                fieldElement.classList.remove(validationErrorClass, validationSuccessClass);
+                
                 if (validationDebug) {
                     console.log(`Validating field: ${fieldName}, value:`, fieldValue);
                 }
                 
+                let fieldIsValid = true;
                 const ruleArray = parseRules(fieldRules);
+                
                 for (let rule of ruleArray) {
                     const result = validateRule(fieldValue, rule, fieldElement, form, attributeType);
                     
                     if (!result.valid) {
                         isValid = false;
+                        fieldIsValid = false;
                         const errorMessage = getErrorMessage(fieldName, rule, fieldMessages, fieldLabel, result.message);
                         
                         if (!validationErrors[fieldName]) {
@@ -119,13 +140,18 @@ function validationJs(formElement, rules, messages = {}, attributeType = 'name')
                         validationErrors[fieldName].push(errorMessage);
                         
                         // Add error class to field
-                        fieldElement.classList.add('error');
+                        fieldElement.classList.add(validationErrorClass);
                         
                         if (validationDebug) {
                             console.log(`Validation failed for ${fieldName}:`, errorMessage);
                         }
                         break;
                     }
+                }
+                
+                // If validation passed, add success class
+                if (fieldIsValid) {
+                    fieldElement.classList.add(validationSuccessClass);
                 }
             }
         }
@@ -187,18 +213,28 @@ function validationJsDebug(enable = true) {
  * @returns {*} - Field value
  */
 function getFieldValue(element) {
-    if (element.type === 'file') {
+    if (!element) return '';
+
+    const tagName = element.tagName.toLowerCase();
+    const elemType = element.type ? element.type.toLowerCase() : '';
+
+    if (elemType === 'file') {
         return element.files;
-    } else if (element.type === 'checkbox') {
-        return element.checked;
-    } else if (element.type === 'radio') {
+    } else if (elemType === 'checkbox') {
+        return element.checked ? element.value || '1' : '';
+    } else if (elemType === 'radio') {
         const form = element.closest('form');
-        const checked = form.querySelector(`input[name="${element.name}"]:checked`);
-        return checked ? checked.value : '';
-    } else if (element.tagName === 'SELECT' && element.multiple) {
-        return Array.from(element.selectedOptions).map(option => option.value);
+        if (form) {
+            const checked = form.querySelector(`input[name="${element.name}"]:checked`);
+            return checked ? checked.value : '';
+        }
+        return element.checked ? element.value : '';
+    } else if (tagName === 'select' && element.multiple) {
+        const selectedOptions = Array.from(element.selectedOptions).map(option => option.value);
+        return selectedOptions.length > 0 ? selectedOptions : [];
     } else {
-        return element.value;
+        // Handle regular text inputs, textareas, single selects, etc.
+        return element.value || '';
     }
 }
 
@@ -240,6 +276,12 @@ function validateRule(value, rule, element, form, attributeType) {
             
             case 'required_if':
                 return validateRequiredIf(value, parameters, form, attributeType);
+
+            case 'required_with':
+                return validateRequiredWith(value, parameters, form, attributeType);
+                
+            case 'required_unless':
+                return validateRequiredUnless(value, parameters, form, attributeType);
             
             case 'string':
                 return validateString(value);
@@ -390,12 +432,6 @@ function validateRule(value, rule, element, form, attributeType) {
             case 'sometimes':
                 return { valid: true }; // Always valid as it's just a marker
                 
-            case 'required_with':
-                return validateRequiredWith(value, parameters, form, attributeType);
-                
-            case 'required_unless':
-                return validateRequiredUnless(value, parameters, form, attributeType);
-                
             case 'contains':
                 return validateContains(value, parameters);
                 
@@ -445,7 +481,7 @@ function validateRequired(value, element) {
  * @returns {Object} - Object with valid property indicating validation result
  */
 function validateRequiredIf(value, parameters, form, attributeType) {
-    if (parameters.length < 3) return { valid: true };
+    if (parameters.length < 2) return { valid: true };
     
     const [field, operator, ...values] = parameters;
     const targetElement = form.querySelector(`[${attributeType}="${field}"]`);
@@ -455,13 +491,196 @@ function validateRequiredIf(value, parameters, form, attributeType) {
     const targetValue = getFieldValue(targetElement);
     let shouldBeRequired = false;
     
+    const normalizeValue = (val) => {
+        if (val === null || val === undefined || val === '') return null;
+        if (typeof val === 'string' && val.toLowerCase() === 'null') return null;
+        return String(val);
+    };
+    
+    const isNullOrEmpty = (val) => {
+        return val === null || val === undefined || val === '' || 
+               (typeof val === 'string' && val.toLowerCase() === 'null');
+    };
+    
+    const isBooleanTrue = (val) => {
+        if (typeof val === 'boolean') return val;
+        if (typeof val === 'string') {
+            const lower = val.toLowerCase();
+            return lower === 'true' || lower === '1' || lower === 'yes' || lower === 'on';
+        }
+        if (typeof val === 'number') return val !== 0;
+        return false;
+    };
+    
+    const isBooleanFalse = (val) => {
+        if (typeof val === 'boolean') return !val;
+        if (typeof val === 'string') {
+            const lower = val.toLowerCase();
+            return lower === 'false' || lower === '0' || lower === 'no' || lower === 'off' || lower === '';
+        }
+        if (typeof val === 'number') return val === 0;
+        if (val === null || val === undefined) return true;
+        return false;
+    };
+    
+    const normalizedTargetValue = normalizeValue(targetValue);
+    const normalizedComparisonValues = values.map(normalizeValue);
+    
     switch (operator) {
         case '=':
         case '==':
-            shouldBeRequired = values.includes(String(targetValue));
+            if (normalizedComparisonValues.includes('null') || normalizedComparisonValues.includes(null)) {
+                shouldBeRequired = isNullOrEmpty(targetValue);
+            } else {
+                shouldBeRequired = normalizedComparisonValues.includes(normalizedTargetValue);
+            }
             break;
+            
         case '!=':
-            shouldBeRequired = !values.includes(String(targetValue));
+        case '!==':
+            if (normalizedComparisonValues.includes('null') || normalizedComparisonValues.includes(null)) {
+                shouldBeRequired = !isNullOrEmpty(targetValue);
+            } else {
+                shouldBeRequired = !normalizedComparisonValues.includes(normalizedTargetValue);
+            }
+            break;
+            
+        case '>':
+            if (!isNullOrEmpty(targetValue) && !isNaN(targetValue)) {
+                const numTarget = parseFloat(targetValue);
+                shouldBeRequired = normalizedComparisonValues.some(val => 
+                    !isNullOrEmpty(val) && !isNaN(val) && numTarget > parseFloat(val)
+                );
+            }
+            break;
+            
+        case '>=':
+            if (!isNullOrEmpty(targetValue) && !isNaN(targetValue)) {
+                const numTarget = parseFloat(targetValue);
+                shouldBeRequired = normalizedComparisonValues.some(val => 
+                    !isNullOrEmpty(val) && !isNaN(val) && numTarget >= parseFloat(val)
+                );
+            }
+            break;
+            
+        case '<':
+            if (!isNullOrEmpty(targetValue) && !isNaN(targetValue)) {
+                const numTarget = parseFloat(targetValue);
+                shouldBeRequired = normalizedComparisonValues.some(val => 
+                    !isNullOrEmpty(val) && !isNaN(val) && numTarget < parseFloat(val)
+                );
+            }
+            break;
+            
+        case '<=':
+            if (!isNullOrEmpty(targetValue) && !isNaN(targetValue)) {
+                const numTarget = parseFloat(targetValue);
+                shouldBeRequired = normalizedComparisonValues.some(val => 
+                    !isNullOrEmpty(val) && !isNaN(val) && numTarget <= parseFloat(val)
+                );
+            }
+            break;
+            
+        case 'in':
+            shouldBeRequired = normalizedComparisonValues.includes(normalizedTargetValue);
+            break;
+            
+        case 'not_in':
+            shouldBeRequired = !normalizedComparisonValues.includes(normalizedTargetValue);
+            break;
+            
+        case 'empty':
+            shouldBeRequired = isNullOrEmpty(targetValue);
+            break;
+            
+        case 'not_empty':
+            shouldBeRequired = !isNullOrEmpty(targetValue);
+            break;
+            
+        case 'true':
+            shouldBeRequired = isBooleanTrue(targetValue);
+            break;
+            
+        case 'false':
+            shouldBeRequired = isBooleanFalse(targetValue);
+            break;
+            
+        case 'contains':
+            if (typeof targetValue === 'string') {
+                shouldBeRequired = normalizedComparisonValues.some(val => 
+                    val && targetValue.toLowerCase().includes(String(val).toLowerCase())
+                );
+            }
+            break;
+            
+        case 'not_contains':
+            if (typeof targetValue === 'string') {
+                shouldBeRequired = !normalizedComparisonValues.some(val => 
+                    val && targetValue.toLowerCase().includes(String(val).toLowerCase())
+                );
+            } else {
+                shouldBeRequired = true;
+            }
+            break;
+            
+        case 'starts_with':
+            if (typeof targetValue === 'string') {
+                shouldBeRequired = normalizedComparisonValues.some(val => 
+                    val && targetValue.toLowerCase().startsWith(String(val).toLowerCase())
+                );
+            }
+            break;
+            
+        case 'ends_with':
+            if (typeof targetValue === 'string') {
+                shouldBeRequired = normalizedComparisonValues.some(val => 
+                    val && targetValue.toLowerCase().endsWith(String(val).toLowerCase())
+                );
+            }
+            break;
+            
+        case 'regex':
+            if (values.length > 0) {
+                try {
+                    const pattern = new RegExp(values[0], values[1] || '');
+                    shouldBeRequired = pattern.test(String(targetValue));
+                } catch (e) {
+                    console.warn('Invalid regex pattern in required_if validation:', values[0]);
+                    shouldBeRequired = false;
+                }
+            }
+            break;
+            
+        case 'length':
+            const targetLength = String(targetValue).length;
+            if (values.length === 1) {
+                shouldBeRequired = targetLength === parseInt(values[0]);
+            } else if (values.length === 2) {
+                const minLength = parseInt(values[0]) || 0;
+                const maxLength = parseInt(values[1]) || Infinity;
+                shouldBeRequired = targetLength >= minLength && targetLength <= maxLength;
+            }
+            break;
+            
+        case 'count':
+            let count = 0;
+            if (Array.isArray(targetValue)) {
+                count = targetValue.length;
+            } else if (targetElement.type === 'checkbox') {
+                const form = targetElement.closest('form');
+                const checkedBoxes = form.querySelectorAll(`input[name="${targetElement.name}"]:checked`);
+                count = checkedBoxes.length;
+            } else if (targetElement.type === 'file') {
+                count = targetElement.files ? targetElement.files.length : 0;
+            }
+            
+            if (values.length === 1) {
+                shouldBeRequired = count === parseInt(values[0]);
+            } else if (values.length === 2) {
+                const minCount = parseInt(values[0]) || 0;
+                const maxCount = parseInt(values[1]) || Infinity;
+                shouldBeRequired = count >= minCount && count <= maxCount;
+            }
             break;
     }
     
@@ -470,6 +689,267 @@ function validateRequiredIf(value, parameters, form, attributeType) {
     }
     
     return { valid: true };
+}
+
+/**
+ * Validates if a field is required unless another field meets specific conditions
+ * @param {*} value - The field value to validate
+ * @param {Array} parameters - Array of parameters [field, operator, ...values]
+ * @param {HTMLElement} form - The form element
+ * @param {string} attributeType - The attribute type to use ('name' or 'id')
+ * @returns {Object} - Object with valid property indicating validation result
+ */
+function validateRequiredUnless(value, parameters, form, attributeType) {
+    try {
+        if (parameters.length < 2) return { valid: true };
+        
+        const [field, operator, ...values] = parameters;
+        const targetElement = form.querySelector(`[${attributeType}="${field}"]`);
+        
+        if (!targetElement) {
+            // If target field doesn't exist, assume field is required
+            return validateRequired(value, [], form, attributeType);
+        }
+        
+        const targetValue = getFieldValue(targetElement);
+        let conditionMet = false;
+        
+        // Helper function to normalize value for comparison
+        const normalizeValue = (val) => {
+            // Handle null, undefined, empty string cases
+            if (val === null || val === undefined || val === '') {
+                return null;
+            }
+            // Handle string "null" case
+            if (typeof val === 'string' && val.toLowerCase() === 'null') {
+                return null;
+            }
+            return String(val);
+        };
+        
+        // Helper function to check if value is considered "null/empty"
+        const isNullOrEmpty = (val) => {
+            return val === null || 
+                   val === undefined || 
+                   val === '' || 
+                   (typeof val === 'string' && val.toLowerCase() === 'null');
+        };
+        
+        // Helper function to check if value is boolean-like
+        const isBooleanTrue = (val) => {
+            if (typeof val === 'boolean') return val;
+            if (typeof val === 'string') {
+                const lower = val.toLowerCase();
+                return lower === 'true' || lower === '1' || lower === 'yes' || lower === 'on';
+            }
+            if (typeof val === 'number') return val !== 0;
+            return false;
+        };
+        
+        // Helper function to check if value is boolean false-like
+        const isBooleanFalse = (val) => {
+            if (typeof val === 'boolean') return !val;
+            if (typeof val === 'string') {
+                const lower = val.toLowerCase();
+                return lower === 'false' || lower === '0' || lower === 'no' || lower === 'off' || lower === '';
+            }
+            if (typeof val === 'number') return val === 0;
+            if (val === null || val === undefined) return true;
+            return false;
+        };
+        
+        const normalizedTargetValue = normalizeValue(targetValue);
+        const normalizedComparisonValues = values.map(normalizeValue);
+        
+        // Check condition based on operator
+        switch (operator) {
+            case '=':
+            case '==':
+                // Check if target value matches any of the comparison values
+                if (normalizedComparisonValues.includes('null') || normalizedComparisonValues.includes(null)) {
+                    conditionMet = isNullOrEmpty(targetValue);
+                } else {
+                    conditionMet = normalizedComparisonValues.includes(normalizedTargetValue);
+                }
+                break;
+                
+            case '!=':
+            case '!==':
+                // Check if target value does NOT match any of the comparison values
+                if (normalizedComparisonValues.includes('null') || normalizedComparisonValues.includes(null)) {
+                    conditionMet = !isNullOrEmpty(targetValue);
+                } else {
+                    conditionMet = !normalizedComparisonValues.includes(normalizedTargetValue);
+                }
+                break;
+                
+            case '>':
+                if (!isNullOrEmpty(targetValue) && !isNaN(targetValue)) {
+                    const numTarget = parseFloat(targetValue);
+                    conditionMet = normalizedComparisonValues.some(val => 
+                        !isNullOrEmpty(val) && !isNaN(val) && numTarget > parseFloat(val)
+                    );
+                }
+                break;
+                
+            case '>=':
+                if (!isNullOrEmpty(targetValue) && !isNaN(targetValue)) {
+                    const numTarget = parseFloat(targetValue);
+                    conditionMet = normalizedComparisonValues.some(val => 
+                        !isNullOrEmpty(val) && !isNaN(val) && numTarget >= parseFloat(val)
+                    );
+                }
+                break;
+                
+            case '<':
+                if (!isNullOrEmpty(targetValue) && !isNaN(targetValue)) {
+                    const numTarget = parseFloat(targetValue);
+                    conditionMet = normalizedComparisonValues.some(val => 
+                        !isNullOrEmpty(val) && !isNaN(val) && numTarget < parseFloat(val)
+                    );
+                }
+                break;
+                
+            case '<=':
+                if (!isNullOrEmpty(targetValue) && !isNaN(targetValue)) {
+                    const numTarget = parseFloat(targetValue);
+                    conditionMet = normalizedComparisonValues.some(val => 
+                        !isNullOrEmpty(val) && !isNaN(val) && numTarget <= parseFloat(val)
+                    );
+                }
+                break;
+                
+            case 'in':
+                conditionMet = normalizedComparisonValues.includes(normalizedTargetValue);
+                break;
+                
+            case 'not_in':
+                conditionMet = !normalizedComparisonValues.includes(normalizedTargetValue);
+                break;
+                
+            case 'empty':
+                conditionMet = isNullOrEmpty(targetValue);
+                break;
+                
+            case 'not_empty':
+                conditionMet = !isNullOrEmpty(targetValue);
+                break;
+                
+            case 'true':
+                conditionMet = isBooleanTrue(targetValue);
+                break;
+                
+            case 'false':
+                conditionMet = isBooleanFalse(targetValue);
+                break;
+                
+            case 'contains':
+                if (typeof targetValue === 'string') {
+                    conditionMet = normalizedComparisonValues.some(val => 
+                        val && targetValue.toLowerCase().includes(String(val).toLowerCase())
+                    );
+                }
+                break;
+                
+            case 'not_contains':
+                if (typeof targetValue === 'string') {
+                    conditionMet = !normalizedComparisonValues.some(val => 
+                        val && targetValue.toLowerCase().includes(String(val).toLowerCase())
+                    );
+                } else {
+                    conditionMet = true; // Non-string values don't contain anything
+                }
+                break;
+                
+            case 'starts_with':
+                if (typeof targetValue === 'string') {
+                    conditionMet = normalizedComparisonValues.some(val => 
+                        val && targetValue.toLowerCase().startsWith(String(val).toLowerCase())
+                    );
+                }
+                break;
+                
+            case 'ends_with':
+                if (typeof targetValue === 'string') {
+                    conditionMet = normalizedComparisonValues.some(val => 
+                        val && targetValue.toLowerCase().endsWith(String(val).toLowerCase())
+                    );
+                }
+                break;
+                
+            case 'regex':
+                if (values.length > 0) {
+                    try {
+                        const pattern = new RegExp(values[0], values[1] || '');
+                        conditionMet = pattern.test(String(targetValue));
+                    } catch (e) {
+                        console.warn('Invalid regex pattern in required_unless validation:', values[0]);
+                        conditionMet = false;
+                    }
+                }
+                break;
+                
+            case 'length':
+                const targetLength = String(targetValue).length;
+                if (values.length === 1) {
+                    // Exact length
+                    conditionMet = targetLength === parseInt(values[0]);
+                } else if (values.length === 2) {
+                    // Length range
+                    const minLength = parseInt(values[0]) || 0;
+                    const maxLength = parseInt(values[1]) || Infinity;
+                    conditionMet = targetLength >= minLength && targetLength <= maxLength;
+                }
+                break;
+                
+            case 'count':
+                // For arrays, checkboxes, or multiple selects
+                let count = 0;
+                if (Array.isArray(targetValue)) {
+                    count = targetValue.length;
+                } else if (targetElement.type === 'checkbox') {
+                    const form = targetElement.closest('form');
+                    const checkedBoxes = form.querySelectorAll(`input[name="${targetElement.name}"]:checked`);
+                    count = checkedBoxes.length;
+                } else if (targetElement.type === 'file') {
+                    count = targetElement.files ? targetElement.files.length : 0;
+                }
+                
+                if (values.length === 1) {
+                    conditionMet = count === parseInt(values[0]);
+                } else if (values.length === 2) {
+                    const minCount = parseInt(values[0]) || 0;
+                    const maxCount = parseInt(values[1]) || Infinity;
+                    conditionMet = count >= minCount && count <= maxCount;
+                }
+                break;
+                
+            default:
+                // Fallback to simple equality check
+                conditionMet = normalizedComparisonValues.includes(normalizedTargetValue);
+                break;
+        }
+        
+        // For required_unless, the field is NOT required if the condition is met
+        if (conditionMet) {
+            return { valid: true }; // Condition met, field is optional
+        }
+        
+        // Condition not met, field is required
+        const requiredResult = validateRequired(value, [], form, attributeType);
+        if (!requiredResult.valid) {
+           return requiredResult;
+        }
+        
+        return { valid: true };
+        
+    } catch (error) {
+        console.error('Error in validateRequiredUnless:', error);
+        return { 
+            valid: false, 
+            message: 'Validation error occurred'
+        };
+    }
 }
 
 /**
@@ -1576,31 +2056,6 @@ function validateRequiredWith(value, parameters, form, attributeType) {
         return { valid: true };
     } catch (error) {
         console.error('Error in required_with validation:', error);
-        return { valid: false };
-    }
-}
-
-function validateRequiredUnless(value, parameters, form, attributeType) {
-    try {
-        if (parameters.length < 2) return { valid: true };
-        
-        const fieldName = parameters[0];
-        const fieldElement = form.querySelector(`[${attributeType}="${fieldName}"]`);
-        
-        if (!fieldElement) return validateRequired(value);
-        
-        const fieldValue = getFieldValue(fieldElement);
-        const allowedValues = parameters.slice(1);
-        
-        // If the field value is in the allowed values, this field is optional
-        if (allowedValues.includes(String(fieldValue))) {
-            return { valid: true };
-        }
-        
-        // Otherwise, it's required
-        return validateRequired(value);
-    } catch (error) {
-        console.error('Error in required_unless validation:', error);
         return { valid: false };
     }
 }
